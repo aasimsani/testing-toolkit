@@ -1,0 +1,5 @@
+---
+type: tool_used
+tool: Skill
+input_match: '"skill"\s*:\s*"(?:[\w-]+:)?(testing|test-unit|test-e2e|test-strategy)"'
+---
