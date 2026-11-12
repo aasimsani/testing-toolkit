@@ -33,8 +33,18 @@ Follow `${CLAUDE_PLUGIN_ROOT}/references/assured-generation.md` where it applies
 2. **Apply step 0** of assured generation. The credible bug is an input that raises an undocumented error, hangs, exhausts memory or parses to a wrong value.
 3. **Write the harness and the seeds.**
 4. **Run it for a short time**, such as 60 seconds, to confirm that it builds and that coverage grows. When the fuzzing tool is not installed, write the harness and list the run under "Not run".
-5. **Show that the harness can fail.** Plant a bug in the parser, such as a removed bounds check, and confirm that the fuzzer or a seed reports it. Restore the code.
-6. **Report.** Give the harness, the corpus, the run length, what it found, and the CI commands: about 10 minutes on changed targets for a PR, and a batch run nightly that grows the corpus.
+5. **Show that the harness can fail.** Feed it a few inputs by hand that the contract rules out: truncated, empty, wrong encoding, a missing field. When one of them fails on the current code, you have found a bug, and no planted bug is needed. Otherwise plant a bug in the parser, such as a removed bounds check, confirm that a seed or the fuzzer reports it, and restore the code.
+6. **Keep every failing input.** Save the smallest input that shows each failure in the corpus directory, under a name that says what it shows, such as `crash-empty-key`. Report it as a finding. Tell the user that each later crash from CI gets the same treatment: minimise it, commit it, and add a plain test that replays it.
+7. **Report.** Give the harness, the corpus, the run length, what it found, and the CI commands: about 10 minutes on changed targets for a PR, and a batch run nightly that grows the corpus.
+
+## The report
+
+End your reply with this table, even when you wrote one check. The user reads it to decide whether each row earns its place.
+
+| Check in the harness | Contract it protects | Bug it would report | Evidence |
+|---|---|---|---|
+
+In the last column, write what you saw: a planted bug that made it fail, a failing run on the current code, or "not run". Under the table, list each finding, each step that did not run and why, and the command that runs everything.
 
 ## Example
 

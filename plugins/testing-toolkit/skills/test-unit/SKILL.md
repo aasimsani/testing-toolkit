@@ -38,6 +38,15 @@ Use the runner, the layout and the naming that the repo already has.
 5. **Check for flakiness and value**, as steps 3 and 4 of assured generation describe. Plant each bug, see the test fail, and restore the code.
 6. **Report** with the table from step 6 of assured generation.
 
+## The report
+
+End your reply with this table, even when you wrote one test. The user reads it to decide whether each row earns its place.
+
+| Test | Contract it protects | Bug that would make it fail | Evidence |
+|---|---|---|---|
+
+In the last column, write what you saw: a planted bug that made it fail, a failing run on the current code, or "not run". Under the table, list each finding, each step that did not run and why, and the command that runs everything.
+
 ## Example
 
 The spec says: "Orders of 10 or more items get 10% off."

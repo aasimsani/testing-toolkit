@@ -40,6 +40,15 @@ Follow `${CLAUDE_PLUGIN_ROOT}/references/assured-generation.md` where it applies
 
 When the regression set has sat at 100% for weeks, promote cases from the capability set that now pass.
 
+## The report
+
+End your reply with this table, even when you wrote one case. The user reads it to decide whether each row earns its place.
+
+| Case or group | Rule it protects | Prompt or model change that would make it fail | Evidence |
+|---|---|---|---|
+
+In the last column, write what you saw: a planted bug that made it fail, a failing run on the current code, or "not run". Under the table, list each finding, each step that did not run and why, and the command that runs everything.
+
 ## Example
 
 ```yaml

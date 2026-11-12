@@ -44,6 +44,15 @@ pact-broker can-i-deploy --pacticipant orders-web --version "$GIT_SHA" --to-envi
 pact-broker record-deployment --pacticipant orders-web --version "$GIT_SHA" --environment production
 ```
 
+## The report
+
+End your reply with this table, even when you wrote one interaction. The user reads it to decide whether each row earns its place.
+
+| Interaction | What the consumer depends on | Provider change that would break it | Evidence |
+|---|---|---|---|
+
+In the last column, write what you saw: a planted bug that made it fail, a failing run on the current code, or "not run". Under the table, list each finding, each step that did not run and why, and the command that runs everything.
+
 ## Example
 
 The consumer shows an order's `id` and `status`, and it branches on `status`. The provider's response also holds `customer`, `lines` and `created_at`.

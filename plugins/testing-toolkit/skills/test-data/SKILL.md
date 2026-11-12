@@ -35,6 +35,15 @@ Tools: dbt data tests and dbt unit tests, Great Expectations, Soda. Use what the
 6. **For a change to an existing model**, compare the table before and after the change, and explain every difference.
 7. **Report** with the table from step 6 of assured generation.
 
+## The report
+
+End your reply with this table, even when you wrote one test. The user reads it to decide whether each row earns its place.
+
+| Test | Rule or assumption it protects | Bug or bad data that would make it fail | Evidence |
+|---|---|---|---|
+
+In the last column, write what you saw: a planted bug that made it fail, a failing run on the current code, or "not run". Under the table, list each finding, each step that did not run and why, and the command that runs everything.
+
 ## Example
 
 ```yaml

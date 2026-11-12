@@ -50,6 +50,15 @@ Follow `${CLAUDE_PLUGIN_ROOT}/references/assured-generation.md` for every test. 
 6. **Plant bugs**, as step 4 of assured generation describes. A property that passes on every planted bug checks nothing.
 7. **Report** with the table from step 6 of assured generation, plus the number of examples and the generator bounds.
 
+## The report
+
+End your reply with this table, even when you wrote one property. The user reads it to decide whether each row earns its place.
+
+| Property | Rule it protects | Bug that would make it fail | Evidence |
+|---|---|---|---|
+
+In the last column, write what you saw: a planted bug that made it fail, a failing run on the current code, or "not run". Under the table, list each finding, each step that did not run and why, and the command that runs everything.
+
 ## Example
 
 ```python

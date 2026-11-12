@@ -43,6 +43,15 @@ A plain assertion on a recorded value needs no library. Use one only when the re
 
 A snapshot that people regenerate without reading protects nothing. Keep snapshots small, mask dynamic values, and require an explanation in the PR for every update. Prefer an assertion on the fields that matter over a snapshot of a whole object or page.
 
+## The report
+
+End your reply with this table, even when you wrote one pin. The user reads it to decide whether each row earns its place.
+
+| Pin | Behaviour it records | Change that would make it fail | Evidence |
+|---|---|---|---|
+
+In the last column, write what you saw: a planted bug that made it fail, a failing run on the current code, or "not run". Under the table, list each finding, each step that did not run and why, and the command that runs everything.
+
 ## Example
 
 ```python

@@ -40,6 +40,15 @@ Follow `${CLAUDE_PLUGIN_ROOT}/references/assured-generation.md` for every test. 
 
 For a client of another service or a store, add tests that put Toxiproxy between the code and the dependency. Cover a timeout, a 5xx or a dropped connection, and a slow response. Each test asserts what the caller promises in that case: a retry, a fallback, or a clear error.
 
+## The report
+
+End your reply with this table, even when you wrote one test. The user reads it to decide whether each row earns its place.
+
+| Test | Contract it protects | Bug that would make it fail | Evidence |
+|---|---|---|---|
+
+In the last column, write what you saw: a planted bug that made it fail, a failing run on the current code, or "not run". Under the table, list each finding, each step that did not run and why, and the command that runs everything.
+
 ## Example
 
 ```python

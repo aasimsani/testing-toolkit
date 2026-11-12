@@ -47,6 +47,15 @@ Follow `${CLAUDE_PLUGIN_ROOT}/references/assured-generation.md` where it applies
 
 For a micro-benchmark, commit the benchmark and a stored baseline, and fail only on a slowdown that is larger than the run-to-run noise.
 
+## The report
+
+End your reply with this table, even when you wrote one threshold. The user reads it to decide whether each row earns its place.
+
+| Threshold or check | Where the number comes from | Regression that would make it fail | Evidence |
+|---|---|---|---|
+
+In the last column, write what you saw: a planted bug that made it fail, a failing run on the current code, or "not run". Under the table, list each finding, each step that did not run and why, and the command that runs everything.
+
 ## Example
 
 ```js

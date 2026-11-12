@@ -4,6 +4,8 @@ Every authoring skill in this plugin runs its tests through these steps before i
 
 A step that you could not run is not a pass. Name it in the report.
 
+Keep the steps cheap. Run the five repeats of step 3 in one shell command. In step 4, plant one bug for each rule that matters, up to five in total, and prefer one command that plants the bug, runs the tests and restores the file.
+
 ## Step 0. Decide whether the test should exist
 
 Answer four questions for each test before you write it. Drop the test when you can't answer one of them.

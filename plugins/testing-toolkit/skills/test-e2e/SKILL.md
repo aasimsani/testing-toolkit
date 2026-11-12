@@ -41,6 +41,15 @@ Follow `${CLAUDE_PLUGIN_ROOT}/references/assured-generation.md` for every test. 
 
 Add an axe scan inside the journey for each page it visits, and fail on serious violations. For visual regression, take a screenshot only of a stable region, mask every dynamic value, and explain each baseline update in the PR.
 
+## The report
+
+End your reply with this table, even when you wrote one test. The user reads it to decide whether each row earns its place.
+
+| Test | Journey and outcome it protects | Break that would make it fail | Evidence |
+|---|---|---|---|
+
+In the last column, write what you saw: a planted bug that made it fail, a failing run on the current code, or "not run". Under the table, list each finding, each step that did not run and why, and the command that runs everything.
+
 ## Example
 
 ```ts
