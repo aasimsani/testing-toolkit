@@ -1,0 +1,16 @@
+{
+  "name": "testing-toolkit",
+  "metadata": {
+    "description": "Test-building skills for Claude Code"
+  },
+  "owner": {
+    "name": "Aasim Sani"
+  },
+  "plugins": [
+    {
+      "name": "testing-toolkit",
+      "source": "./plugins/testing-toolkit",
+      "description": "Picks the kind of test a change needs, writes it from the spec, and shows a test only after it has passed, stayed stable over repeated runs, and failed on a planted bug. Covers unit, integration, contract, E2E, characterization, property, fuzz, load, data and LLM-eval tests, plus mutation, audit, flaky-triage and release-safety skills."
+    }
+  ]
+}

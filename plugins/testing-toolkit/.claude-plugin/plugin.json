@@ -1,0 +1,8 @@
+{
+  "name": "testing-toolkit",
+  "description": "Test-building skills. The router classifies the change and picks a playbook. Ten authoring skills write tests from the spec and keep a test only when it passes, stays stable over repeated runs, and fails on a planted bug. Four analysis skills find the gaps (mutation, quality review, flaky triage, audit). Three planning skills cover strategy, chaos experiments and release safety.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Aasim Sani"
+  }
+}
