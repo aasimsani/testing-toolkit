@@ -1,0 +1,1 @@
+"""The tinycfg package."""

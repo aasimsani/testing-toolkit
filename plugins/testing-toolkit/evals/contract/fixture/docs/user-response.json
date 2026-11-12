@@ -1,0 +1,11 @@
+{
+  "id": 7,
+  "displayName": "Ada Lovelace",
+  "avatarUrl": "https://cdn.example.com/avatars/7.png",
+  "plan": "pro",
+  "email": "ada@example.com",
+  "createdAt": "2024-03-01T09:30:00Z",
+  "address": { "city": "London", "country": "GB" },
+  "preferences": { "newsletter": true, "theme": "dark" },
+  "lastLoginAt": "2026-11-01T18:02:11Z"
+}

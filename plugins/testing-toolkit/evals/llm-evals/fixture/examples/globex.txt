@@ -1,0 +1,8 @@
+GLOBEX GmbH - Rechnung
+Rechnungsnummer 2026/0931
+Rechnungsdatum 14.09.2026
+
+Beratung, 12 Stunden                 1.440,00 EUR
+Gesamtbetrag                         1.440,00 EUR
+
+Zahlbar bis 14.10.2026

@@ -1,0 +1,12 @@
+{
+  "name": "profile-widget",
+  "version": "1.4.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@pact-foundation/pact": "^13.1.0",
+    "vitest": "^2.1.0"
+  }
+}

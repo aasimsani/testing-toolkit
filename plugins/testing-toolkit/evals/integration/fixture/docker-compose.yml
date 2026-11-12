@@ -1,0 +1,8 @@
+services:
+  db:
+    image: postgres:15.6
+    environment:
+      POSTGRES_PASSWORD: inventory
+      POSTGRES_DB: inventory
+    ports:
+      - "5432:5432"

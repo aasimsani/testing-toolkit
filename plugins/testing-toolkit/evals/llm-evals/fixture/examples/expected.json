@@ -1,0 +1,5 @@
+{
+  "acme.txt": {"vendor": "ACME Industrial Supplies Ltd.", "invoice_number": "INV-20418", "total_cents": 123450, "currency": "GBP", "due_date": "2026-11-02"},
+  "globex.txt": {"vendor": "GLOBEX GmbH", "invoice_number": "2026/0931", "total_cents": 144000, "currency": "EUR", "due_date": "2026-10-14"},
+  "initech.txt": {"vendor": "Initech LLC", "invoice_number": "7781", "total_cents": 31200, "currency": "USD", "due_date": null}
+}

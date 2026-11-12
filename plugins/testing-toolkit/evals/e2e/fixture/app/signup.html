@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Sign up</title>
+  </head>
+  <body>
+    <main class="page page--narrow">
+      <h1 class="title title-xl">Create your account</h1>
+      <form id="signup-form" class="form form--wide" method="post" action="/signup">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" class="inp inp-lg" type="email" name="email" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" class="inp inp-lg" type="password" name="password" required>
+        </div>
+        <label class="chk"><input type="checkbox" name="terms" required> I accept the terms</label>
+        <button type="submit" class="btn btn-primary btn-xl">Create account</button>
+        <div role="alert" class="alert alert-danger" hidden></div>
+      </form>
+    </main>
+  </body>
+</html>

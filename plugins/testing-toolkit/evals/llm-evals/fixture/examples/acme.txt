@@ -1,0 +1,9 @@
+ACME Industrial Supplies Ltd.
+Invoice No: INV-20418
+Date: 3 October 2026
+
+Hydraulic fittings x 40        1,180.00
+Delivery                          54.50
+TOTAL DUE (GBP)                1,234.50
+
+Payment due by 2 November 2026.

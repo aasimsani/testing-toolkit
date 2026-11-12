@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: shop
+    tables:
+      - name: orders
+
+models:
+  - name: stg_orders
+  - name: dim_customers
