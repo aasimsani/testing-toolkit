@@ -1,6 +1,6 @@
 ---
 name: testing
-description: "Routes any testing request to the right kind of test and the right order of work. Classifies the change (bug fix, new feature, refactor, legacy code, new endpoint, migration, prompt change, incident follow-up and more), picks a test shape per component, then calls the authoring, analysis and planning skills of this plugin in playbook order. Use when asked to add tests, test a change, improve a test suite, set up testing or CI stages on a repo, or when the kind of test is not decided yet. Not for running an existing suite once or for debugging one failing test."
+description: "Decides which kinds of test a change needs, and gets them written. Classifies the change (bug fix, new feature, refactor, legacy code, new endpoint, migration, prompt change, incident follow-up and more), picks a test shape per component, then calls the authoring, analysis and planning skills of this plugin in playbook order. Use when asked to add tests, add the tests a change needs, test a change, improve a test suite, set up testing or CI stages on a repo, or when the kind of test is not decided yet. Not for running an existing suite once or for debugging one failing test."
 ---
 
 # Testing
@@ -22,11 +22,20 @@ The kinds form a loop. An analysis finds a gap, and an authoring skill closes it
 
 Read `${CLAUDE_PLUGIN_ROOT}/references/scenario-playbooks.md` and find the row whose signal matches the request or the diff. Tell the user which scenario you picked in one sentence. When two rows fit, run the stricter one.
 
-### 2. Pick the shape for each component
+### 2. Choose the kinds of test
 
-When the request covers more than one function or file, read `${CLAUDE_PLUGIN_ROOT}/references/strategy-models.md`. For each component, ask where the bug is most likely if the component breaks, and choose the layer from the answer. Turn on static analysis and types before you write a test.
+For each component the change touches, ask where the bug is most likely if the component breaks, and choose the kind of test from the answer. When the request covers more than one function or file, read `${CLAUDE_PLUGIN_ROOT}/references/strategy-models.md` first. Turn on static analysis and types before you write a test.
 
-Skip this step for a single function with an obvious layer.
+Write the choice down before you write a test, and keep it in the final report:
+
+| Component | Where the bug would be | Kind of test | Skill |
+|---|---|---|---|
+| `tax/rates.py` | Its own logic: the boundary of each rate band | Unit | `test-unit` |
+| `ledger/repo.py` | The database: constraints, conflicts and transactions | Integration | `test-integration` |
+
+Then name the kinds of test you considered and left out, with one reason each, such as "no E2E test, because this change adds no user journey". Write no test of a kind that has no credible bug behind it.
+
+For a single function with an obvious kind, one line replaces the table.
 
 ### 3. Run the playbook
 
@@ -38,7 +47,7 @@ Hand each gap that an analysis finds to the authoring skill for its layer. Stop 
 
 ### 5. Report
 
-Give the report that `${CLAUDE_PLUGIN_ROOT}/references/assured-generation.md` describes: one row per test with the contract it protects, the bug that would make it fail, and the evidence. Add the scenario, the playbook steps you ran, and the steps you skipped with the reason.
+Give the report that `${CLAUDE_PLUGIN_ROOT}/references/assured-generation.md` describes: one row per test with the contract it protects, the bug that would make it fail, and the evidence. Put the scenario, the table of choices from step 2 and the kinds of test you left out above it. Add the playbook steps you ran, and the steps you skipped with the reason.
 
 ## Rules
 
