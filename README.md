@@ -52,7 +52,7 @@ This version ships no CI workflow files and no per-language reference files. `pi
 
 ## Eval
 
-`plugins/testing-toolkit/evals/` holds one case per kind of authored test, plus one open-ended case for the router. Each case gives the agent a small fixture repo and a one-line request, then grades the test it wrote and the explanation it gave.
+`plugins/testing-toolkit/evals/` holds one case per kind of authored test, one open-ended case for the router, and five harder cases. Each case gives the agent a small fixture repo and a one-line request, then grades the test it wrote and the explanation it gave.
 
 | Case | Fixture | What a proper result needs |
 |---|---|---|
@@ -72,22 +72,38 @@ Every case also grades the explanation. The final message must say which behavio
 
 Most graders are regex and file checks. The LLM judge answers one yes-or-no question per grader, because it replies with a single word and gives no reasoning. A grader that reads a file reads one named file, so each prompt names the file that holds the tests and their fixtures.
 
+### Harder cases
+
+With the plugin, both models pass every grader of the ten cases above, so those cases can't show whether a change to a skill helps. The five `hard-*` cases were added for that. Each one is hard for a different reason.
+
+| Case | Fixture | Why it is hard | What a proper result needs |
+|---|---|---|---|
+| `hard-unit` | A parking tariff with three planted bugs: a boundary, a rounding rule, and two rules applied in the wrong order | Every example in the README passes on the buggy code, so each bug shows only at a value that the agent derives from a rule | The README's value kept at all three places, three reported disagreements, and production code left as it was |
+| `hard-green` | A suite in which three tests fail after a change. Two tests are out of date, and the third has caught a regression | The request says that all three are out of date, and asks for a green suite today | The two stale tests updated with the changelog as the reason, the third test kept, and the regression named |
+| `hard-layer` | Coupon rules in a pure function behind a checkout page, in a repo whose only tests are Playwright specs | The request points at Playwright | The rules in unit tests, at most three browser tests for the journey, the reason for the split, and one reported boundary bug |
+| `hard-property` | A function that merges calendar periods. One bug shows only when a period lies inside another, and a second bug changes the caller's list | Properties about order, overlap and repeated calls all hold on the buggy code | A property that compares the minutes covered, a generator that can nest periods, a pinned counterexample, and both bugs reported |
+| `hard-router` | A change with time-zone logic, a Postgres outbox that several workers read, and a client of an outside SMS provider | Three components need three kinds of test, and one rule is about two workers that act at the same time | Unit tests at both ends of the quiet hours, two connections against a pinned Postgres, HTTP stubs for the provider, and one reported boundary bug |
+
+These five cases have not been run, because the budget for paid runs went to the results below. `tests/check_eval_references.py` checks what needs no model. It lays a reference result over each fixture, and then every file and regex grader must pass and the reference tests must fail on exactly the planted bugs. The graders that an LLM judges have not seen real output. The first ten cases needed corrections to such graders after their first run, so expect the same here.
+
 ### Run it
 
 ```bash
 claude plugin eval plugins/testing-toolkit \
   --model sonnet --runs 1 \
   --scaffold --allow-tools Bash Write Edit \
-  --max-cost-usd 9 -j 4
+  --max-cost-usd 15 -j 4
 ```
 
-`--scaffold` lets each case copy its fixture into the run's workspace. The command runs every case twice, with the plugin and without it, and reports the difference. Add `--case unit` to run one case, and `--ablation none` to skip the run without the plugin.
+`--scaffold` lets each case copy its fixture into the run's workspace. The command runs every case twice, with the plugin and without it, and reports the difference. Add `--case unit` to run one case, `--case 'hard-*'` to run the five harder cases alone, and `--ablation none` to skip the run without the plugin.
+
+The limit of 15 dollars is an estimate for all 16 cases. The first eleven cost about 8 dollars on Sonnet, and the harder cases have no measured cost yet.
 
 Run one eval command at a time. Two commands that started together failed with `OAuth token revoked`.
 
 ### Results
 
-One run per case and arm on 2026-11-12, with Claude Code 2.1.322. The `sonnet` alias resolved to `claude-sonnet-5`, and `opus` to `claude-opus-5-5`. The judge was `claude-sonnet-5`. A score is the weighted share of graders that passed.
+One run per case and arm on 2026-11-12, with Claude Code 2.1.322. The `sonnet` alias resolved to `claude-sonnet-5`, and `opus` to `claude-opus-5-5`. The judge was `claude-sonnet-5`. A score is the weighted share of graders that passed. The `hard-*` cases are not in the table, because they have not been run.
 
 | Case | Sonnet with | Sonnet without | Opus with | Opus without |
 |---|---|---|---|---|
@@ -115,7 +131,7 @@ What the numbers show:
 How far to trust them:
 
 1. **Each cell is one run.** In the first Sonnet run the baseline left the 30000 g boundary out of its `unit` tests, and in the two later runs it tested it.
-2. **The suite has no headroom with the plugin.** Every grader passes on the ten kinds of test, so the suite can't show whether a later change to a skill is an improvement. It needs harder cases before it can guide more work on the skills.
+2. **These cases can't show an improvement.** With the plugin, every grader passes on the ten kinds of test, so the table can't show whether a later change to a skill helps. The `hard-*` cases exist for that, and nobody has run them yet.
 3. **The graders check the rules the skills teach.** A pass means the agent followed those rules. No grader runs the tests against planted bugs, because the eval tool has no grader that runs a script.
 4. **The table is not the raw output of two commands.** The two ten-case runs gave means of 1.00 and 0.71 on Sonnet, and 0.97 and 0.86 on Opus. Reading the failed verdicts showed graders that were wrong in both directions. Six graders that read the final message were reworded and judged again from the messages the runs had saved, with the judge's own prompt and model. `integration` on both models and `unit` on Sonnet were rerun, because their corrected graders read files that the runs did not save.
 5. **The Opus `router` score is a grader limit.** The two graders for the store read `tests/test_store.py` only, and Opus put its database fixture in `tests/conftest.py` in both arms. The fixture's README now rules out `conftest.py`, and the case was not rerun. The `router` row keeps the verdicts of its one run on each model, except for one reworded grader that was judged again from the saved messages.
@@ -126,9 +142,10 @@ Both arms of the ten cases cost $7.27 on Sonnet and $8.25 on Opus.
 
 ```bash
 bash tests/test_structure.sh
+python3 tests/check_eval_references.py
 ```
 
-The script checks that every file a skill tells Claude to read exists, and that every skill another file names ships.
+The first script checks that every file a skill tells Claude to read exists, and that every skill another file names ships. The second script checks the `hard-*` cases against the reference results in `tests/eval-references/`, and needs `uv` and Node. The reference results sit outside the plugin directory, so that an agent in an eval run can't read them.
 
 ## License
 
