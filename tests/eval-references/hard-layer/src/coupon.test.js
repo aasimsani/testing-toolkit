@@ -5,12 +5,12 @@ import { test } from "node:test";
 
 import { applyCoupon, CouponError } from "./coupon.js";
 
-const percent = { kind: "percent", value: 10, minCartCents: 5000, expires: "2026-05-31" };
-const fixed = { kind: "fixed", value: 2000, minCartCents: 0, expires: "2026-05-31" };
+const percent = { kind: "percent", value: 10, minBookingCents: 5000, expires: "2026-05-31" };
+const fixed = { kind: "fixed", value: 2000, minBookingCents: 0, expires: "2026-05-31" };
 
-function reasonOf(coupon, cartCents, today) {
+function reasonOf(coupon, bookingCents, today) {
   try {
-    applyCoupon(coupon, cartCents, today);
+    applyCoupon(coupon, bookingCents, today);
   } catch (error) {
     assert.ok(error instanceof CouponError);
     return error.reason;
@@ -27,22 +27,22 @@ test("a coupon has expired on the day after its expiry date", () => {
 });
 
 test(
-  "a cart of exactly the minimum qualifies",
-  { todo: "README rule 2 says this cart qualifies. The code rejects it with cart_too_small." },
+  "a booking of exactly the minimum qualifies",
+  { todo: "README rule 2 says this booking qualifies. The code rejects it with booking_too_small." },
   () => {
     assert.equal(applyCoupon(percent, 5000, "2026-05-01"), 4500);
   },
 );
 
-test("a cart one cent below the minimum is too small", () => {
-  assert.equal(reasonOf(percent, 4999, "2026-05-01"), "cart_too_small");
+test("a booking one cent below the minimum is too small", () => {
+  assert.equal(reasonOf(percent, 4999, "2026-05-01"), "booking_too_small");
 });
 
 test("a percent discount is rounded down to a whole cent", () => {
-  assert.equal(applyCoupon({ ...percent, value: 15, minCartCents: 0 }, 999, "2026-05-01"), 850);
+  assert.equal(applyCoupon({ ...percent, value: 15, minBookingCents: 0 }, 999, "2026-05-01"), 850);
 });
 
-test("a fixed coupon never takes the total below 0", () => {
+test("a fixed coupon never takes the court fee below 0", () => {
   assert.equal(applyCoupon(fixed, 1500, "2026-05-01"), 0);
 });
 

@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Courts</title>
+  </head>
+  <body>
+    <h1>Courts</h1>
+    <button type="button" id="pick">Pick court 2</button>
+    <ul id="picked"></ul>
+    <script>
+      document.getElementById("pick").addEventListener("click", () => {
+        const item = document.createElement("li");
+        item.textContent = "Court 2";
+        document.getElementById("picked").append(item);
+      });
+    </script>
+  </body>
+</html>

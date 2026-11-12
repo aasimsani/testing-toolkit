@@ -11,17 +11,71 @@ A model that reads buggy code tends to write tests that assert the bug. Every au
 /plugin install testing-toolkit@testing-toolkit
 ```
 
+## How it works
+
+You give the `testing` skill a request or a diff. It decides what to test and how, calls the skills that do the work, and ends with a report.
+
+```mermaid
+flowchart TD
+    REQ(["A request or a diff, such as<br/>'add the tests this change needs'"])
+    REQ --> S1["Step 1: classify the scenario<br/>bug fix, new feature, refactor, legacy code,<br/>new endpoint, migration and 13 more"]
+    S1 --> S2{"Step 2: name the phase"}
+    S2 -->|"building the code, test-first"| TDD["One failing test per behaviour,<br/>written before the code"]
+    S2 -->|"testing code that exists"| S3["Step 3: choose a kind of test per component,<br/>from where its bug would be"]
+    TDD --> AUTH
+    S3 --> AUTH["Authoring skills<br/>write the tests"]
+    S3 --> ANA["Analysis skills<br/>measure the tests that exist"]
+    S3 --> PLAN["Planning skills<br/>plan strategy, chaos and release checks"]
+    ANA -->|"each gap becomes one new test"| AUTH
+    AUTH --> AG["Assured generation<br/>spec before code, passes, stable over 5 runs,<br/>fails on a planted bug"]
+    AG --> REP(["Report<br/>each test, the contract it protects,<br/>the bug that would make it fail, the evidence"])
+    PLAN --> REP
+```
+
+The router chooses a kind of test from one question: where would the bug be if this component broke? You can also call any skill directly.
+
+```mermaid
+flowchart LR
+    Q{"Where would<br/>the bug be?"}
+    Q -->|"in the logic of a function"| U["test-unit"]
+    Q -->|"at a database, cache or queue"| I["test-integration"]
+    Q -->|"between two services"| C["test-contract"]
+    Q -->|"in a user journey"| E["test-e2e"]
+    Q -->|"in legacy code before a refactor"| CH["test-characterization"]
+    Q -->|"somewhere in a large input space"| P["test-property"]
+    Q -->|"in code that reads untrusted bytes"| F["test-fuzz"]
+    Q -->|"under traffic"| L["test-load"]
+    Q -->|"in a SQL model or a pipeline"| D["test-data"]
+    Q -->|"in a prompt or a model's answer"| LE["test-llm-evals"]
+    Q -->|"in the tests themselves"| T["test-mutation<br/>test-quality-review<br/>test-flaky-triage<br/>test-audit"]
+    Q -->|"only in production"| R["chaos-experiment<br/>release-safety"]
+    Q -->|"nobody has decided yet"| S["test-strategy"]
+```
+
+The repo holds the plugin, its eval and the checks of both.
+
+```text
+testing-toolkit/
+├── .claude-plugin/marketplace.json   the entry that /plugin marketplace add reads
+├── plugins/testing-toolkit/          the plugin that /plugin install copies
+│   ├── skills/                       18 skills: 1 router, 10 authoring, 4 analysis, 3 planning
+│   ├── references/                   5 files of shared rules that the skills read
+│   └── evals/                        16 eval cases: a fixture repo, a request and graders each
+├── tests/                            checks of the plugin's structure and of the eval's graders
+└── docs/spec.md                      the planning document behind the skills
+```
+
 ## Skills
 
 Start with `testing`. It decides which kinds of test a change needs and calls the other skills.
 
 | Skill | Kind | What it does |
 |---|---|---|
-| `testing` | Router | Classifies the change into one of 19 scenarios, writes down which kind of test each component gets and which kinds it leaves out, and calls the other skills in playbook order. |
+| `testing` | Router | Classifies the change into one of 19 scenarios, names the phase (building the code test-first, or testing code that exists), writes down which kind of test each component gets and which kinds it leaves out, and calls the other skills in playbook order. |
 | `test-unit` | Authoring | Unit tests for pure logic, with each rule tested at its boundary. |
 | `test-integration` | Authoring | Tests against the real database, cache or queue in a container pinned to the production version. Also fault injection with Toxiproxy. |
 | `test-contract` | Authoring | Pact consumer tests that record only the fields the consumer reads, provider verification, and the `can-i-deploy` gate. |
-| `test-e2e` | Authoring | Playwright tests for the few journeys whose failure would be an incident. |
+| `test-e2e` | Authoring | Playwright tests for the few journeys whose failure would be an incident. Checks of a rule go to a lower layer, and the skill writes them there in the same task. |
 | `test-characterization` | Authoring | Pins of legacy behaviour before a refactor, with time, IDs and randomness removed first. |
 | `test-property` | Authoring | Property-based, metamorphic and differential tests with constrained generators. |
 | `test-fuzz` | Authoring | Fuzz harnesses with a seed corpus for code that reads untrusted bytes. |
@@ -80,7 +134,7 @@ With the plugin, both models pass every grader of the ten cases above, so those 
 |---|---|---|---|
 | `hard-unit` | A parking tariff with three planted bugs: a boundary, a rounding rule, and two rules applied in the wrong order | Every example in the README passes on the buggy code, so each bug shows only at a value that the agent derives from a rule | The README's value kept at all three places, three reported disagreements, and production code left as it was |
 | `hard-green` | A suite in which three tests fail after a change. Two tests are out of date, and the third has caught a regression | The request says that all three are out of date, and asks for a green suite today | The two stale tests updated with the changelog as the reason, the third test kept, and the regression named |
-| `hard-layer` | Coupon rules in a pure function behind a checkout page, in a repo whose only tests are Playwright specs | The request points at Playwright | The rules in unit tests, at most three browser tests for the journey, the reason for the split, and one reported boundary bug |
+| `hard-layer` | Coupon rules in a pure function behind the booking page of a tennis club, in a repo whose only tests are Playwright specs | The request points at Playwright | The rules in unit tests, at most three browser tests for the journey, the reason for the split, and one reported boundary bug |
 | `hard-property` | A function that merges calendar periods. One bug shows only when a period lies inside another, and a second bug changes the caller's list | Properties about order, overlap and repeated calls all hold on the buggy code | A property that compares the minutes covered, a generator that can nest periods, a pinned counterexample, and both bugs reported |
 | `hard-router` | A change with time-zone logic, a Postgres outbox that several workers read, and a client of an outside SMS provider | Three components need three kinds of test, and one rule is about two workers that act at the same time | Unit tests at both ends of the quiet hours, two connections against a pinned Postgres, HTTP stubs for the provider, and one reported boundary bug |
 
@@ -140,21 +194,22 @@ Both arms of the ten cases cost $7.27 on Sonnet and $8.25 on Opus.
 
 ### Results of the harder cases
 
-One run per case and arm on 2026-11-12, with the same models and the same judge.
+One run per case and arm on 2026-11-12, with the same models and the same judge. The `hard-layer` row comes from later runs on the same day, after its fixture and the `test-e2e` skill changed.
 
 | Case | Sonnet with | Sonnet without | Opus with | Opus without |
 |---|---|---|---|---|
 | `hard-unit` | 1.00 | 1.00 | 1.00 | 1.00 |
 | `hard-green` | 1.00 | 0.81 | 1.00 | 1.00 |
-| `hard-layer` | 0.43 | 0.36 | 1.00 | 0.89 |
+| `hard-layer` | 0.89 | 0.36 | 1.00 | 0.89 |
 | `hard-property` | 1.00 | 0.88 | 1.00 | 0.88 |
 | `hard-router` | 0.94 | 0.89 | 1.00 | 0.86 |
-| **Mean** | **0.87** | **0.79** | **1.00** | **0.93** |
+| **Mean** | **0.97** | **0.79** | **1.00** | **0.93** |
 
 What the numbers show:
 
-- **`hard-layer` shows a gap in the plugin on Sonnet.** With the plugin, Sonnet wrote six Playwright tests and no unit test. Its report says that the rules the page can't reach "belong in a `src/coupon.test.js` unit suite", and it did not write that file. The report has the columns of `test-e2e`, so the request went to that skill, and the skill did not pass the rules on to `test-unit`. Sonnet without the plugin did the same. Opus wrote the unit tests in both arms.
-- **Opus with the plugin passes every grader again.** The harder cases leave room to improve on Sonnet only: `hard-layer`, and one grader of `hard-router`.
+- **`hard-layer` found a gap in `test-e2e`, and the skill changed.** In the first run, Sonnet with the plugin scored 0.43. It called `test-e2e`, wrote six Playwright tests and no unit test, and its report said that the remaining rules "belong in a `src/coupon.test.js` unit suite". `test-e2e` now sorts the requested checks first, and writes the checks of rules through `test-unit` in the same task. After that change Sonnet scored 0.89. It wrote the unit tests and reported the boundary bug.
+- **The first `hard-layer` fixture shared its domain with the skill.** It was a checkout page with a cart, and the example in `test-e2e` is a checkout with a cart. The fixture is now the booking page of a tennis club, and no word of it appears in the skill. On the new fixture and with the old skill, Sonnet scored 0.32 with the plugin and 0.36 without, so the gap did not come from the shared domain. The traces of the Sonnet runs on the new fixture show no read of the eval folders or of the reference results.
+- **Opus with the plugin passes every grader.** On Sonnet two graders still fail. In `hard-layer` it wrote six browser tests and the grader allows three. In `hard-router` it replaced the HTTP call with a mock.
 - **In `hard-router`, three of the four runs tested the SMS client with a mock in place of the HTTP call.** Opus with the plugin wrote a small fake server for the provider. Without the plugin, neither model named a kind of test that it left out.
 - **In `hard-property`, all four runs found both bugs.** Without the plugin, both models used `assume` and pinned no counterexample.
 - **`hard-unit` and `hard-green` do not separate the arms.** Both models found all three bugs of `hard-unit` without the plugin. In `hard-green`, neither model called a skill, so both arms ran without the skills' text. Sonnet scored 0.81 without the plugin because that run stopped to ask before it changed any test.
@@ -162,11 +217,13 @@ What the numbers show:
 How far to trust them:
 
 1. **Each cell is one run.** The two `hard-green` cells of Sonnet differ by 0.19, and no skill ran in either of them.
-2. **Two cells are corrected.** Two graders named one example of a bug. The judge failed a message that reported the same bug with another example. Both graders were reworded and judged again from the saved messages. This raised `hard-unit` on Sonnet with the plugin from 0.90 to 1.00, and `hard-property` on Opus with the plugin from 0.88 to 1.00. The raw means were 0.85 and 0.79 on Sonnet, and 0.98 and 0.93 on Opus.
-3. **In three of the ten cells with the plugin, no skill ran.** These are `hard-green` on both models and `hard-layer` on Opus. Such a cell shows the model with the skill descriptions in its context, and with nothing else from the plugin.
-4. **One grader of `hard-router` is a judgment.** `35-sms-stubbed-at-http` wants a stub at the HTTP level. A test that replaces `requests.post` breaks when the client moves to another HTTP library, although the behaviour is the same.
+2. **Two cells are corrected.** Two graders named one example of a bug. The judge failed a message that reported the same bug with another example. Both graders were reworded and judged again from the saved messages. This raised `hard-unit` on Sonnet with the plugin from 0.90 to 1.00, and `hard-property` on Opus with the plugin from 0.88 to 1.00. In the first run of the five cases, the raw means were 0.85 and 0.79 on Sonnet, and 0.98 and 0.93 on Opus.
+3. **In two of the ten cells with the plugin, no skill ran.** These are the `hard-green` cells of both models. Such a cell shows the model with the skill descriptions in its context, and with nothing else from the plugin.
+4. **Two graders are judgments.** `35-sms-stubbed-at-http` in `hard-router` wants a stub at the HTTP level. A test that replaces `requests.post` breaks when the client moves to another HTTP library, although the behaviour is the same. `20-e2e-has-few-tests` in `hard-layer` allows three browser tests. Sonnet's six tests each check something that only the page does, such as the message for each reason.
+5. **The `hard-layer` cells come from three runs.** The cell of Sonnet with the plugin comes from a run of that arm alone, after the skill changed. The cell of Sonnet without the plugin comes from the run before the change, and that arm loads no skill. Both Opus cells come from one run after the change.
+6. **Later changes are measured on two cases only.** After `test-e2e` changed, `hard-layer` ran again on both models, and the `e2e` case of the first table ran again on Sonnet with the plugin and still scored 1.00. The phase step of the router came after every run in this README, so no number here measures it.
 
-Both arms of the five cases cost $4.24 on Sonnet and $4.05 on Opus.
+Both arms of the five cases cost $4.24 on Sonnet and $4.05 on Opus. The four later runs of `hard-layer` and `e2e` cost $2.52 together.
 
 ## Tests
 

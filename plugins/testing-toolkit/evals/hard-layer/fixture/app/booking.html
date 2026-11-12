@@ -2,11 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Checkout</title>
+    <title>Book a court</title>
   </head>
   <body>
-    <h1>Checkout</h1>
-    <p>Total: <output id="total" aria-label="Total">$80.00</output></p>
+    <h1>Book a court</h1>
+    <p>Court 2, Saturday, 10:00 to 12:00</p>
+    <p>Court fee: <output id="fee" aria-label="Court fee">$80.00</output></p>
     <form id="coupon-form">
       <label for="code">Coupon code</label>
       <input id="code" name="code" autocomplete="off" />
@@ -16,20 +17,20 @@
     <script type="module">
       import { applyCoupon } from "../src/coupon.js";
 
-      const CART_CENTS = 8000;
+      const BOOKING_CENTS = 8000;
       const COUPONS = {
-        SPRING10: { kind: "percent", value: 10, minCartCents: 5000, expires: "2099-12-31" },
-        BIG20: { kind: "fixed", value: 2000, minCartCents: 10000, expires: "2099-12-31" },
-        WINTER5: { kind: "percent", value: 5, minCartCents: 0, expires: "2020-01-31" },
+        SPRING10: { kind: "percent", value: 10, minBookingCents: 5000, expires: "2099-12-31" },
+        BIG20: { kind: "fixed", value: 2000, minBookingCents: 10000, expires: "2099-12-31" },
+        WINTER5: { kind: "percent", value: 5, minBookingCents: 0, expires: "2020-01-31" },
       };
       const MESSAGES = {
         expired: "This coupon has expired.",
-        cart_too_small: "Your cart is too small for this coupon.",
+        booking_too_small: "This booking is too small for this coupon.",
         unknown_kind: "This coupon can't be used here.",
         unknown_code: "We don't know this coupon.",
       };
 
-      const total = document.getElementById("total");
+      const fee = document.getElementById("fee");
       const error = document.getElementById("coupon-error");
 
       document.getElementById("coupon-form").addEventListener("submit", (event) => {
@@ -38,8 +39,8 @@
         error.hidden = true;
         try {
           if (!coupon) throw { reason: "unknown_code" };
-          const cents = applyCoupon(coupon, CART_CENTS, new Date().toISOString().slice(0, 10));
-          total.textContent = `$${(cents / 100).toFixed(2)}`;
+          const cents = applyCoupon(coupon, BOOKING_CENTS, new Date().toISOString().slice(0, 10));
+          fee.textContent = `$${(cents / 100).toFixed(2)}`;
         } catch (failure) {
           error.textContent = MESSAGES[failure.reason];
           error.hidden = false;
