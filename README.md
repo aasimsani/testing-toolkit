@@ -84,7 +84,7 @@ With the plugin, both models pass every grader of the ten cases above, so those 
 | `hard-property` | A function that merges calendar periods. One bug shows only when a period lies inside another, and a second bug changes the caller's list | Properties about order, overlap and repeated calls all hold on the buggy code | A property that compares the minutes covered, a generator that can nest periods, a pinned counterexample, and both bugs reported |
 | `hard-router` | A change with time-zone logic, a Postgres outbox that several workers read, and a client of an outside SMS provider | Three components need three kinds of test, and one rule is about two workers that act at the same time | Unit tests at both ends of the quiet hours, two connections against a pinned Postgres, HTTP stubs for the provider, and one reported boundary bug |
 
-These five cases have not been run, because the budget for paid runs went to the results below. `tests/check_eval_references.py` checks what needs no model. It lays a reference result over each fixture, and then every file and regex grader must pass and the reference tests must fail on exactly the planted bugs. The graders that an LLM judges have not seen real output. The first ten cases needed corrections to such graders after their first run, so expect the same here.
+`tests/check_eval_references.py` checks what needs no model. It lays a reference result over each fixture, and then every file and regex grader must pass and the reference tests must fail on exactly the planted bugs. The results of the first run are under "Results of the harder cases".
 
 ### Run it
 
@@ -97,13 +97,13 @@ claude plugin eval plugins/testing-toolkit \
 
 `--scaffold` lets each case copy its fixture into the run's workspace. The command runs every case twice, with the plugin and without it, and reports the difference. Add `--case unit` to run one case, `--case 'hard-*'` to run the five harder cases alone, and `--ablation none` to skip the run without the plugin.
 
-The limit of 15 dollars is an estimate for all 16 cases. The first eleven cost about 8 dollars on Sonnet, and the harder cases have no measured cost yet.
+All 16 cases cost about 12 dollars on Sonnet: about 8 for the first eleven, and 4.24 for the five harder cases.
 
 Run one eval command at a time. Two commands that started together failed with `OAuth token revoked`.
 
 ### Results
 
-One run per case and arm on 2026-11-12, with Claude Code 2.1.322. The `sonnet` alias resolved to `claude-sonnet-5`, and `opus` to `claude-opus-5-5`. The judge was `claude-sonnet-5`. A score is the weighted share of graders that passed. The `hard-*` cases are not in the table, because they have not been run.
+One run per case and arm on 2026-11-12, with Claude Code 2.1.322. The `sonnet` alias resolved to `claude-sonnet-5`, and `opus` to `claude-opus-5-5`. The judge was `claude-sonnet-5`. A score is the weighted share of graders that passed. The `hard-*` cases have their own table further down.
 
 | Case | Sonnet with | Sonnet without | Opus with | Opus without |
 |---|---|---|---|---|
@@ -131,12 +131,42 @@ What the numbers show:
 How far to trust them:
 
 1. **Each cell is one run.** In the first Sonnet run the baseline left the 30000 g boundary out of its `unit` tests, and in the two later runs it tested it.
-2. **These cases can't show an improvement.** With the plugin, every grader passes on the ten kinds of test, so the table can't show whether a later change to a skill helps. The `hard-*` cases exist for that, and nobody has run them yet.
+2. **These cases can't show an improvement.** With the plugin, every grader passes on the ten kinds of test, so the table can't show whether a later change to a skill helps. The `hard-*` cases exist for that, and their results follow this list.
 3. **The graders check the rules the skills teach.** A pass means the agent followed those rules. No grader runs the tests against planted bugs, because the eval tool has no grader that runs a script.
 4. **The table is not the raw output of two commands.** The two ten-case runs gave means of 1.00 and 0.71 on Sonnet, and 0.97 and 0.86 on Opus. Reading the failed verdicts showed graders that were wrong in both directions. Six graders that read the final message were reworded and judged again from the messages the runs had saved, with the judge's own prompt and model. `integration` on both models and `unit` on Sonnet were rerun, because their corrected graders read files that the runs did not save.
 5. **The Opus `router` score is a grader limit.** The two graders for the store read `tests/test_store.py` only, and Opus put its database fixture in `tests/conftest.py` in both arms. The fixture's README now rules out `conftest.py`, and the case was not rerun. The `router` row keeps the verdicts of its one run on each model, except for one reworded grader that was judged again from the saved messages.
 
 Both arms of the ten cases cost $7.27 on Sonnet and $8.25 on Opus.
+
+### Results of the harder cases
+
+One run per case and arm on 2026-11-12, with the same models and the same judge.
+
+| Case | Sonnet with | Sonnet without | Opus with | Opus without |
+|---|---|---|---|---|
+| `hard-unit` | 1.00 | 1.00 | 1.00 | 1.00 |
+| `hard-green` | 1.00 | 0.81 | 1.00 | 1.00 |
+| `hard-layer` | 0.43 | 0.36 | 1.00 | 0.89 |
+| `hard-property` | 1.00 | 0.88 | 1.00 | 0.88 |
+| `hard-router` | 0.94 | 0.89 | 1.00 | 0.86 |
+| **Mean** | **0.87** | **0.79** | **1.00** | **0.93** |
+
+What the numbers show:
+
+- **`hard-layer` shows a gap in the plugin on Sonnet.** With the plugin, Sonnet wrote six Playwright tests and no unit test. Its report says that the rules the page can't reach "belong in a `src/coupon.test.js` unit suite", and it did not write that file. The report has the columns of `test-e2e`, so the request went to that skill, and the skill did not pass the rules on to `test-unit`. Sonnet without the plugin did the same. Opus wrote the unit tests in both arms.
+- **Opus with the plugin passes every grader again.** The harder cases leave room to improve on Sonnet only: `hard-layer`, and one grader of `hard-router`.
+- **In `hard-router`, three of the four runs tested the SMS client with a mock in place of the HTTP call.** Opus with the plugin wrote a small fake server for the provider. Without the plugin, neither model named a kind of test that it left out.
+- **In `hard-property`, all four runs found both bugs.** Without the plugin, both models used `assume` and pinned no counterexample.
+- **`hard-unit` and `hard-green` do not separate the arms.** Both models found all three bugs of `hard-unit` without the plugin. In `hard-green`, neither model called a skill, so both arms ran without the skills' text. Sonnet scored 0.81 without the plugin because that run stopped to ask before it changed any test.
+
+How far to trust them:
+
+1. **Each cell is one run.** The two `hard-green` cells of Sonnet differ by 0.19, and no skill ran in either of them.
+2. **Two cells are corrected.** Two graders named one example of a bug. The judge failed a message that reported the same bug with another example. Both graders were reworded and judged again from the saved messages. This raised `hard-unit` on Sonnet with the plugin from 0.90 to 1.00, and `hard-property` on Opus with the plugin from 0.88 to 1.00. The raw means were 0.85 and 0.79 on Sonnet, and 0.98 and 0.93 on Opus.
+3. **In three of the ten cells with the plugin, no skill ran.** These are `hard-green` on both models and `hard-layer` on Opus. Such a cell shows the model with the skill descriptions in its context, and with nothing else from the plugin.
+4. **One grader of `hard-router` is a judgment.** `35-sms-stubbed-at-http` wants a stub at the HTTP level. A test that replaces `requests.post` breaks when the client moves to another HTTP library, although the behaviour is the same.
+
+Both arms of the five cases cost $4.24 on Sonnet and $4.05 on Opus.
 
 ## Tests
 
