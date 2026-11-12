@@ -1,6 +1,6 @@
 ---
 type: regex
-weight: 2
+weight: 1
 target: {source: file, path: tests/test_repo.py}
 match: contains
 ---
