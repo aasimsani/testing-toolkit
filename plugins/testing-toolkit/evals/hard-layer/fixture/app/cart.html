@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cart</title>
+  </head>
+  <body>
+    <h1>Cart</h1>
+    <button type="button" id="add">Add tea towel</button>
+    <ul id="items"></ul>
+    <script>
+      document.getElementById("add").addEventListener("click", () => {
+        const item = document.createElement("li");
+        item.textContent = "Tea towel";
+        document.getElementById("items").append(item);
+      });
+    </script>
+  </body>
+</html>
