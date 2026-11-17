@@ -33,7 +33,7 @@ A test that fails because the code disagrees with the spec stays in the report a
 
 ## Step 3. The test is not flaky
 
-Run the new tests 5 times, in random order where the runner supports it. Any run that differs rejects the test. Fix the cause: a sleep, the wall clock, the network, shared state or test order.
+Run the new tests 5 times, in random order where the runner supports it. Any run that differs makes the test flaky. Fix the cause: a sleep, the wall clock, the network, shared state or test order. When you can't find the cause, keep the test, flag it as flaky with the reason in a comment on the test and in the report, and hand it to `test-flaky-triage`. Never add a retry or a sleep to make it pass.
 
 | Runner | Command |
 |---|---|

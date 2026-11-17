@@ -52,6 +52,23 @@ Then name the kinds of test you considered and left out, with one reason each, s
 
 For a single function with an obvious kind, one line replaces the table.
 
+#### Which kinds to reach for first
+
+In the testing phase, a test that an agent writes from its own reading of the code can pass while the feature is broken, because the test and the code share the same misunderstanding. So reach first for the kinds of test that the agent's assumptions can't satisfy. Take them in this order, and skip a row only when no credible bug sits behind it:
+
+| Order | Kind | When it applies | Why the agent's bias can't satisfy it |
+|---|---|---|---|
+| 1 | An end-to-end check of the change | Every change that has a path a user or a caller can drive: a page, a command or an endpoint | The whole feature either works or fails. It catches parts that each pass their own tests and still don't fit together |
+| 2 | Property tests, with `test-property` | Every rule over an input space: a round trip of encode and decode or parse and print, an invariant such as a balance that never goes negative, a retry or a migration that has the same effect twice as once, fast code that must equal a simple correct version | The library generates the inputs, so they don't come from the assumptions that shaped the code |
+| 3 | Differential tests, with `test-property` | Every change that must keep behaviour: a refactor, a migration, an upgrade or a rewrite | The old system is the oracle, so nobody has to know the right answer in advance. Feed both systems random inputs or a sample of production traffic, ignore differences that don't matter such as whitespace, and keep a list of the differences that are approved |
+| 4 | Example-based unit and integration tests | The boundaries and values that the spec names, each bug fix, and each error that the spec lists | They are fast and pin exact values, but they check only the cases that someone thought of |
+
+The end-to-end check comes in two sizes. A committed E2E test, written with `test-e2e`, is for a journey whose failure would be an incident. Every other change still gets one run of the real system: open the page with the browser tools, run the command, or call the endpoint, and put what you saw in the report. When nothing can run, say so in the report. A check that did not run never counts as a pass.
+
+An end-to-end check shows that the feature is wired up, and it can't reach every boundary of a rule. Rules still go to the lowest layer that reaches them, and the end-to-end check comes on top.
+
+Two limits apply to every kind. A flaky test teaches the agent to run it again instead of fixing the code, so never add a retry or a sleep. Find the cause and fix it. When you can't find it, keep the test, flag it as flaky with the reason in a comment on the test and in the report, and hand it to `test-flaky-triage`. A slow test gets run less often, so run the fast checks after every step and the heavy ones once before the commit.
+
 ### 4. Run the playbook
 
 Call the skills in the order the playbook gives. Every authoring skill follows `${CLAUDE_PLUGIN_ROOT}/references/assured-generation.md`, so read that file before the first test.
@@ -62,7 +79,7 @@ Hand each gap that an analysis finds to the authoring skill for its layer. Stop 
 
 ### 6. Report
 
-Give the report that `${CLAUDE_PLUGIN_ROOT}/references/assured-generation.md` describes: one row per test with the contract it protects, the bug that would make it fail, and the evidence. Put the scenario, the phase, the table of choices from step 3 and the kinds of test you left out above it. Add the playbook steps you ran, and the steps you skipped with the reason.
+Give the report that `${CLAUDE_PLUGIN_ROOT}/references/assured-generation.md` describes: one row per test with the contract it protects, the bug that would make it fail, and the evidence. Put the scenario, the phase, the table of choices from step 3 and the kinds of test you left out above it. Add the playbook steps you ran, and the steps you skipped with the reason. End with one line that says how the change was verified end to end, such as `Verified: signed up in a browser, and the account page showed the new account`, or `Verified: none, because no server can run here`.
 
 ## Rules
 
