@@ -17,8 +17,8 @@ No single shape fits every codebase. Pick a shape for each component from where 
    - At the boundary with a DB, a queue or another service: honeycomb or trophy.
    - In the user flow: trophy plus a few E2E tests.
 2. Turn on static analysis and types before you write tests. They are the bottom layer of every model, and they cost nothing to run.
-3. Write E2E tests only for the few journeys whose failure would be an incident, such as signup, checkout and the core workflow. Move every other check down a layer.
-4. Add a harness where the input space is large: property-based tests for logic, fuzzing for parsers, load tests for hot paths.
+3. Write committed E2E tests only for the few journeys whose failure would be an incident, such as signup, checkout and the core workflow. Move every other check down a layer. Every change with a user path still gets one run of the real system before it is done, because tests that the agent wrote from its own reading of the code can pass while the feature is broken.
+4. Add a harness where the input space is large: property-based tests for logic, fuzzing for parsers, load tests for hot paths. Add a differential test, with the old code as the oracle, wherever a change must keep behaviour.
 5. Add runtime practice once the service has real traffic. The test suite can't see production data shapes or production load.
 
 Microservices change the picture further. Each service gets its own small pyramid, and the emphasis moves to contract tests and to integration tests of one service at a time.

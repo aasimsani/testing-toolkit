@@ -21,7 +21,7 @@ flowchart TD
     REQ --> S1["Step 1: classify the scenario<br/>bug fix, new feature, refactor, legacy code,<br/>new endpoint, migration and 13 more"]
     S1 --> S2{"Step 2: name the phase"}
     S2 -->|"building the code, test-first"| TDD["One failing test per behaviour,<br/>written before the code"]
-    S2 -->|"testing code that exists"| S3["Step 3: choose a kind of test per component,<br/>from where its bug would be"]
+    S2 -->|"testing code that exists"| S3["Step 3: choose a kind of test per component,<br/>from where its bug would be,<br/>end-to-end, property and differential first"]
     TDD --> AUTH
     S3 --> AUTH["Authoring skills<br/>write the tests"]
     S3 --> ANA["Analysis skills<br/>measure the tests that exist"]
@@ -33,6 +33,15 @@ flowchart TD
 ```
 
 The router chooses a kind of test from one question: where would the bug be if this component broke? You can also call any skill directly.
+
+A test that an agent writes from its own reading of the code can pass while the feature is broken. So in the testing phase the router reaches first for the kinds of test that the agent's assumptions can't satisfy, in this order:
+
+1. **An end-to-end check of the change.** A journey whose failure would be an incident gets a committed E2E test. Every other change with a user path gets one run of the real system, and the report says what the run showed.
+2. **Property tests** for every rule over an input space: round trips, invariants, idempotence, and equivalence with a simple correct version.
+3. **Differential tests** for every change that must keep behaviour, with the old system as the oracle.
+4. **Example-based unit and integration tests** for the values and errors that the spec names.
+
+Rules still go to the lowest layer that reaches them, and the report ends with one line that says how the change was verified end to end, or that it wasn't. The order follows [How the Claude Code team thinks about verification](https://claude.dev/blog/how-the-claude-code-team-thinks-about-verification/) by Addy Osmani.
 
 ```mermaid
 flowchart LR
@@ -71,7 +80,7 @@ Start with `testing`. It decides which kinds of test a change needs and calls th
 
 | Skill | Kind | What it does |
 |---|---|---|
-| `testing` | Router | Classifies the change into one of 19 scenarios, names the phase (building the code test-first, or testing code that exists), writes down which kind of test each component gets and which kinds it leaves out, and calls the other skills in playbook order. |
+| `testing` | Router | Classifies the change into one of 19 scenarios, names the phase (building the code test-first, or testing code that exists), ranks the kinds of test that an agent's own assumptions can't satisfy first, writes down which kind of test each component gets and which kinds it leaves out, and calls the other skills in playbook order. |
 | `test-unit` | Authoring | Unit tests for pure logic, with each rule tested at its boundary. |
 | `test-integration` | Authoring | Tests against the real database, cache or queue in a container pinned to the production version. Also fault injection with Toxiproxy. |
 | `test-contract` | Authoring | Pact consumer tests that record only the fields the consumer reads, provider verification, and the `can-i-deploy` gate. |
